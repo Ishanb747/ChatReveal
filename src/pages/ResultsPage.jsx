@@ -15,7 +15,6 @@ export default function ResultsPage() {
 
     async function runAnalysis() {
       try {
-        console.log('🚀 Starting WhatsApp Analysis...');
         setIsAnalyzing(true);
         
         // Get chat data from localStorage
@@ -35,14 +34,12 @@ export default function ResultsPage() {
           throw new Error('Invalid chat data format: missing participants array');
         }
         
-        console.log(`📊 Chat data loaded: ${chatData.messages.length} messages, ${chatData.participants.length} participants`);
         
         // 🆕 Use serverless API endpoint
         // In production, this will be '/api/groq'
         // In development, you might need to use the full URL
         const apiEndpoint = '/api/groq';
         
-        console.log(`🌐 Using serverless API: ${apiEndpoint}`);
 
         // Initialize analyzer with serverless endpoint (no API keys needed in frontend!)
         const analyzer = new WhatsAppAnalyzer(chatData, apiEndpoint);
@@ -50,15 +47,7 @@ export default function ResultsPage() {
         // Run the analysis (serverless function handles API keys and rotation)
         const results = await analyzer.generateReport();
         
-        // Log results to console
-        console.log('✅ Analysis Complete!');
-        console.log('📊 Full Results:', results);
-        console.log('\n🎭 Roles:', results.roles);
-        console.log('\n⚔️ Alignments:', results.alignments);
-        console.log('\n🔥 Dankest Messages:', results.dankest_messages);
-        console.log('\n💬 Topics:', results.topics);
-        console.log('\n🗣️ Vocabulary:', results.vocabulary);
-        
+
         // Store results
         localStorage.setItem('chatAnalysisResults', JSON.stringify(results));
         setAnalysisResults(results);
