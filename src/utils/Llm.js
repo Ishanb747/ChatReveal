@@ -28,7 +28,6 @@ class WhatsAppAnalyzer {
     this.apiUrl = apiEndpoint;
     this.currentApiKeyIndex = 0;
     
-    console.log(`✓ Initialized with serverless API endpoint: ${this.apiUrl}`);
     
     // Filter messages by valid participants
     this.messages = this.allMessages.filter(
@@ -44,7 +43,6 @@ class WhatsAppAnalyzer {
     // Preprocess for quality
     this.processedMessages = this._preprocessMessages();
     
-    console.log(`✓ Loaded ${this.processedMessages.length.toLocaleString()} quality messages from ${this.participants.length} participants`);
   }
 
   /**
@@ -53,7 +51,6 @@ class WhatsAppAnalyzer {
   _getNextApiKeyIndex() {
     const index = this.currentApiKeyIndex;
     this.currentApiKeyIndex = (this.currentApiKeyIndex + 1) % 10; // Support up to 10 keys
-    console.log(`🔑 Using API key index: ${index}`);
     return index;
   }
 
@@ -251,7 +248,6 @@ class WhatsAppAnalyzer {
     const hotspotCount = Math.floor(n * 0.40);
     const qualityCount = Math.floor(n * 0.30);
     
-    console.log(`  📍 Sampling: ${temporalCount} temporal + ${hotspotCount} hotspots + ${qualityCount} quality`);
     
     // Get samples from each strategy
     const temporalSamples = this._temporalStratifiedSample(temporalCount);
@@ -275,7 +271,6 @@ class WhatsAppAnalyzer {
     const shuffled = unique.sort(() => Math.random() - 0.5);
     const final = shuffled.slice(0, n);
     
-    console.log(`  ✓ Sampled ${final.length} diverse messages`);
     return final;
   }
 
@@ -361,7 +356,6 @@ class WhatsAppAnalyzer {
           lastError = new Error(`Rate limit exceeded (429)`);
           
           if (attempt < retries - 1) {
-            console.log(`⏳ Rate limited. Waiting ${(waitTime/1000).toFixed(1)}s before retry...`);
             await this._sleep(waitTime);
             continue;
           }
@@ -385,7 +379,6 @@ class WhatsAppAnalyzer {
           error.message.includes('timeout')
         )) {
           const delayMs = Math.min(1000 * Math.pow(2, attempt), 10000);
-          console.log(`⚠️ Network error. Retrying in ${(delayMs/1000).toFixed(1)}s...`);
           await this._sleep(delayMs);
           continue;
         }
@@ -465,7 +458,6 @@ Return ONLY valid JSON:
 }`;
     
     try {
-      console.log('🤖 Core Analysis API call...');
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a chat analyst. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
@@ -473,7 +465,6 @@ Return ONLY valid JSON:
       
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
-      console.log(`✓ Core analysis complete: ${parsed.personalities?.length || 0} personalities`);
       return parsed;
     } catch (e) {
       console.error(`⚠️ Core analysis error: ${e}`);
@@ -552,7 +543,6 @@ Return ONLY valid JSON:
 }`;
     
     try {
-      console.log('🤖 Content Analysis API call...');
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a comedy curator finding the WILDEST moments. No filter. Find the funniest, darkest, weirdest stuff. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
@@ -561,12 +551,7 @@ Return ONLY valid JSON:
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
       
-      console.log(`✓ Content analysis complete:`);
-      console.log(`  - Vocabulary: ${parsed.vocabulary?.length || 0}`);
-      console.log(`  - Topics: ${parsed.topics?.length || 0}`);
-      console.log(`  - Who Said This: ${parsed.who_said_this?.length || 0}`);
-      console.log(`  - Dankest Messages: ${parsed.dankest_messages?.length || 0}`);
-      
+
       return parsed;
     } catch (e) {
       console.error(`⚠️ Content analysis error: ${e}`);
@@ -617,10 +602,7 @@ Return ONLY valid JSON:
   }
 
   async generateReport() {
-    console.log('\n' + '='.repeat(60));
-    console.log('ENHANCED CHAT ANALYSIS v3.6 - SERVERLESS API');
-    console.log('='.repeat(60) + '\n');
-    
+
     const startTime = Date.now();
     
     const report = {
@@ -633,11 +615,9 @@ Return ONLY valid JSON:
     };
     
     // Quick stats
-    console.log('📊 Quick Stats...');
     report.stats = this.extractQuickStats();
     
     // API Call 1: Core Analysis
-    console.log('🤖 API Call [1/2]: Core Analysis (400 samples)...');
     const core = await this.aiCoreAnalysis(400);
     report.personalities = core.personalities || [];
     report.roles = core.roles || {};
@@ -645,11 +625,9 @@ Return ONLY valid JSON:
     report.closest_pairs = core.pairs || [];
     
     // Add delay between API calls to avoid rate limits
-    console.log('⏳ Waiting 2s before next API call...');
     await this._sleep(2000);
     
     // API Call 2: Content Analysis
-    console.log('🤖 API Call [2/2]: Dank Content Hunt (600 samples)...');
     const content = await this.aiContentAnalysis(600);
     
     // Add vocabulary
@@ -661,7 +639,6 @@ Return ONLY valid JSON:
     // Add Who Said This quiz (filter min 3 words)
     let whoSaidThis = content.who_said_this || [];
     if (whoSaidThis.length > 0) {
-      console.log(`📝 Filtering Who Said This (min 3 words)...`);
       whoSaidThis = this._filterMeaningfulMessages(whoSaidThis, 'quote', 3);
     }
     report.who_said_this = whoSaidThis;
@@ -669,11 +646,9 @@ Return ONLY valid JSON:
     // Add Dankest Messages (unified, no duplicates, filter min 3 words)
     let dankestMessages = content.dankest_messages || [];
     if (dankestMessages.length > 0) {
-      console.log(`📝 Filtering dankest messages (min 3 words)...`);
       dankestMessages = this._filterMeaningfulMessages(dankestMessages, 'message', 3);
       
       // CRITICAL: Remove any duplicate messages
-      console.log(`📝 Removing duplicate messages...`);
       const seenMessages = new Set();
       const uniqueDankest = [];
       
@@ -683,14 +658,12 @@ Return ONLY valid JSON:
           seenMessages.add(msgKey);
           uniqueDankest.push(moment);
         } else {
-          console.log(`  ⚠️ Removed duplicate: "${moment.message.substring(0, 50)}..."`);
         }
       }
       
       dankestMessages = uniqueDankest;
       
       // Add context to dankest messages
-      console.log(`📝 Adding context to ${dankestMessages.length} unique dankest messages...`);
       report.dankest_messages = this.enhanceMomentsWithContext(dankestMessages);
     } else {
       report.dankest_messages = [];
@@ -700,13 +673,7 @@ Return ONLY valid JSON:
     
     const elapsed = (Date.now() - startTime) / 1000;
     report.metadata.analysis_time = Math.round(elapsed * 100) / 100;
-    
-    console.log(`\n✅ Complete in ${elapsed.toFixed(1)}s`);
-    console.log(`   Vocabulary: ${report.vocabulary.length}`);
-    console.log(`   Topics: ${report.topics.length}`);
-    console.log(`   Who Said This: ${report.who_said_this.length}`);
-    console.log(`   Dankest Messages: ${report.dankest_messages.length} (filtered, unified)\n`);
-    
+
     return report;
   }
 }
