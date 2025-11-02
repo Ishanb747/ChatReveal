@@ -53,9 +53,7 @@ export function getSlides() {
   const network = buildNetworkGraph(messages);
   const aiSlides = getAISlides();
   
-  if (aiSlides.length > 0) {
-    console.log(`✨ Adding ${aiSlides.length} AI-powered slides!`);
-  }
+https://chat-reveal.vercel.app/
 
   // Conversation Starter
   if (starters && Object.keys(starters).length > 0) {
