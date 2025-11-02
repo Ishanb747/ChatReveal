@@ -1,7 +1,8 @@
 /**
- * Enhanced Token-Optimized WhatsApp Chat Analyzer v3.5
- * JavaScript/Browser Version
- * - Multi-API key support (rotates between keys for each call)
+ * Enhanced Token-Optimized WhatsApp Chat Analyzer v3.6
+ * JavaScript/Browser Version with Serverless API Support
+ * - Uses Vercel serverless function to avoid CORS
+ * - Multi-API key support (server-side rotation)
  * - Multi-strategy sampling (temporal + hotspots + quality)
  * - Better conversation thread detection
  * - Context messages for dank moments
@@ -13,7 +14,7 @@
  */
 
 class WhatsAppAnalyzer {
-  constructor(chatData, groqApiKeys) {
+  constructor(chatData, apiEndpoint = '/api/groq') {
     this.data = chatData;
     this.allMessages = this.data.messages;
     
@@ -23,19 +24,11 @@ class WhatsAppAnalyzer {
       p => !excluded.some(ex => p.includes(ex))
     );
     
-    // Support both single key (string) or multiple keys (array)
-    if (typeof groqApiKeys === 'string') {
-      this.apiKeys = [groqApiKeys];
-    } else if (Array.isArray(groqApiKeys)) {
-      this.apiKeys = groqApiKeys;
-    } else {
-      throw new Error('groqApiKeys must be a string or array of strings');
-    }
-    
+    // API endpoint (defaults to local Vercel serverless function)
+    this.apiUrl = apiEndpoint;
     this.currentApiKeyIndex = 0;
-    this.apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
     
-    console.log(`✓ Initialized with ${this.apiKeys.length} API key(s)`);
+    console.log(`✓ Initialized with serverless API endpoint: ${this.apiUrl}`);
     
     // Filter messages by valid participants
     this.messages = this.allMessages.filter(
@@ -55,13 +48,13 @@ class WhatsAppAnalyzer {
   }
 
   /**
-   * Get the next API key in rotation
+   * Rotate API key index for server-side key selection
    */
-  _getNextApiKey() {
-    const key = this.apiKeys[this.currentApiKeyIndex];
-    this.currentApiKeyIndex = (this.currentApiKeyIndex + 1) % this.apiKeys.length;
-    console.log(`🔑 Using API key #${this.currentApiKeyIndex} (rotated)`);
-    return key;
+  _getNextApiKeyIndex() {
+    const index = this.currentApiKeyIndex;
+    this.currentApiKeyIndex = (this.currentApiKeyIndex + 1) % 10; // Support up to 10 keys
+    console.log(`🔑 Using API key index: ${index}`);
+    return index;
   }
 
   _preprocessMessages() {
@@ -333,9 +326,8 @@ class WhatsAppAnalyzer {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async _callGroqAPI(messages, temperature = 0.4, maxTokens = 2500, retries = 5, apiKey = null) {
-    // Use provided API key or get next one from rotation
-    const selectedApiKey = apiKey || this._getNextApiKey();
+  async _callGroqAPI(messages, temperature = 0.4, maxTokens = 2500, retries = 5) {
+    const apiKeyIndex = this._getNextApiKeyIndex();
     let lastError;
     
     for (let attempt = 0; attempt < retries; attempt++) {
@@ -343,28 +335,29 @@ class WhatsAppAnalyzer {
         // Add delay before retry (exponential backoff)
         if (attempt > 0) {
           const delayMs = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10s
-          console.log(`⏳ Rate limit hit. Retrying in ${(delayMs/1000).toFixed(1)}s... (Attempt ${attempt + 1}/${retries})`);
+          console.log(`⏳ Retrying in ${(delayMs/1000).toFixed(1)}s... (Attempt ${attempt + 1}/${retries})`);
           await this._sleep(delayMs);
         }
         
+        // Call serverless function instead of Groq directly
         const response = await fetch(this.apiUrl, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${selectedApiKey}`,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
             messages,
             temperature,
-            max_tokens: maxTokens
+            max_tokens: maxTokens,
+            api_key_index: apiKeyIndex
           })
         });
         
         // Handle rate limits specifically
         if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 2000;
+          const data = await response.json().catch(() => ({}));
+          const retryAfter = data.retry_after || 2;
+          const waitTime = parseInt(retryAfter) * 1000;
           lastError = new Error(`Rate limit exceeded (429)`);
           
           if (attempt < retries - 1) {
@@ -376,7 +369,7 @@ class WhatsAppAnalyzer {
         
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Groq API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+          throw new Error(`API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
         }
         
         const data = await response.json();
@@ -472,11 +465,11 @@ Return ONLY valid JSON:
 }`;
     
     try {
-      console.log('🔑 Using dedicated API key for Core Analysis');
+      console.log('🤖 Core Analysis API call...');
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a chat analyst. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
-      ], 0.4, 2500, 5); // Uses next API key in rotation
+      ], 0.4, 2500, 5);
       
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
@@ -559,11 +552,11 @@ Return ONLY valid JSON:
 }`;
     
     try {
-      console.log('🔑 Using dedicated API key for Content Analysis');
+      console.log('🤖 Content Analysis API call...');
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a comedy curator finding the WILDEST moments. No filter. Find the funniest, darkest, weirdest stuff. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
-      ], 0.7, 4000, 5); // Uses next API key in rotation
+      ], 0.7, 4000, 5);
       
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
@@ -625,7 +618,7 @@ Return ONLY valid JSON:
 
   async generateReport() {
     console.log('\n' + '='.repeat(60));
-    console.log('ENHANCED CHAT ANALYSIS v3.5 - MULTI-API + DANK MODE');
+    console.log('ENHANCED CHAT ANALYSIS v3.6 - SERVERLESS API');
     console.log('='.repeat(60) + '\n');
     
     const startTime = Date.now();
@@ -635,8 +628,7 @@ Return ONLY valid JSON:
         total_messages: this.processedMessages.length,
         participants: this.participants,
         analysis_timestamp: new Date().toISOString(),
-        optimization: 'v3.5 - Multi-API Keys + Group Vocabulary + Unified Dankest Messages',
-        api_keys_used: this.apiKeys.length
+        optimization: 'v3.6 - Serverless API + Multi-Key Rotation',
       }
     };
     
@@ -644,7 +636,7 @@ Return ONLY valid JSON:
     console.log('📊 Quick Stats...');
     report.stats = this.extractQuickStats();
     
-    // API Call 1: Core Analysis (uses first API key)
+    // API Call 1: Core Analysis
     console.log('🤖 API Call [1/2]: Core Analysis (400 samples)...');
     const core = await this.aiCoreAnalysis(400);
     report.personalities = core.personalities || [];
@@ -656,7 +648,7 @@ Return ONLY valid JSON:
     console.log('⏳ Waiting 2s before next API call...');
     await this._sleep(2000);
     
-    // API Call 2: Content Analysis (uses second API key)
+    // API Call 2: Content Analysis
     console.log('🤖 API Call [2/2]: Dank Content Hunt (600 samples)...');
     const content = await this.aiContentAnalysis(600);
     
@@ -710,7 +702,6 @@ Return ONLY valid JSON:
     report.metadata.analysis_time = Math.round(elapsed * 100) / 100;
     
     console.log(`\n✅ Complete in ${elapsed.toFixed(1)}s`);
-    console.log(`   API Keys Used: ${this.apiKeys.length}`);
     console.log(`   Vocabulary: ${report.vocabulary.length}`);
     console.log(`   Topics: ${report.topics.length}`);
     console.log(`   Who Said This: ${report.who_said_this.length}`);

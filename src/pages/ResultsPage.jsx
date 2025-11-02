@@ -37,38 +37,17 @@ export default function ResultsPage() {
         
         console.log(`📊 Chat data loaded: ${chatData.messages.length} messages, ${chatData.participants.length} participants`);
         
-        // 🆕 GET MULTIPLE GROQ API KEYS
-        // Method 1: From environment variables (recommended)
-        const groqApiKey1 = import.meta.env.VITE_GROQ_API_KEY;
-        const groqApiKey2 = import.meta.env.VITE_GROQ_API_KEY_2;
+        // 🆕 Use serverless API endpoint
+        // In production, this will be '/api/groq'
+        // In development, you might need to use the full URL
+        const apiEndpoint = '/api/groq';
         
-        // Build array of API keys
-        const apiKeys = [];
-        
-        if (groqApiKey1) {
-          apiKeys.push(groqApiKey1);
-        }
-        
-        if (groqApiKey2) {
-          apiKeys.push(groqApiKey2);
-        }
-        
-        // Fallback: if only one key is set, use it twice (won't help with rate limits but prevents crashes)
-        if (apiKeys.length === 0) {
-          throw new Error('❌ No Groq API keys found! Set VITE_GROQ_API_KEY and VITE_GROQ_API_KEY_2 in .env file');
-        }
-        
-        if (apiKeys.length === 1) {
-          console.warn('⚠️ Only one API key found. Using the same key for both calls (rate limits may still occur)');
-          apiKeys.push(apiKeys[0]); // Duplicate the single key
-        }
-        
-        console.log(`✅ Found ${apiKeys.length} API key(s)`);
+        console.log(`🌐 Using serverless API: ${apiEndpoint}`);
 
-        // Initialize analyzer with multiple API keys
-        const analyzer = new WhatsAppAnalyzer(chatData, apiKeys);
+        // Initialize analyzer with serverless endpoint (no API keys needed in frontend!)
+        const analyzer = new WhatsAppAnalyzer(chatData, apiEndpoint);
         
-        // Run the analysis (it will automatically rotate between API keys)
+        // Run the analysis (serverless function handles API keys and rotation)
         const results = await analyzer.generateReport();
         
         // Log results to console
@@ -76,10 +55,9 @@ export default function ResultsPage() {
         console.log('📊 Full Results:', results);
         console.log('\n🎭 Roles:', results.roles);
         console.log('\n⚔️ Alignments:', results.alignments);
-        console.log('\n🌟 Golden Moments:', results.golden_moments);
-        console.log('\n🎪 Memes:', results.memes);
-        console.log('\n😄 Humor:', results.humor);
+        console.log('\n🔥 Dankest Messages:', results.dankest_messages);
         console.log('\n💬 Topics:', results.topics);
+        console.log('\n🗣️ Vocabulary:', results.vocabulary);
         
         // Store results
         localStorage.setItem('chatAnalysisResults', JSON.stringify(results));
@@ -127,7 +105,7 @@ export default function ResultsPage() {
             <br />
             🎭 Discovering personalities
             <br />
-            🔑 Using multiple API keys for faster processing
+            🔒 Secure serverless processing
           </p>
           <div className="mt-8 text-purple-300 text-sm">
             This usually takes 10-30 seconds
