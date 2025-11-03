@@ -126,26 +126,25 @@ function SlideCard({ slide, direction }) {
 
   return (
     <div
-      className={`bg-black/40 border border-white/20 rounded-2xl p-10 w-[70%] max-w-3xl text-center 
-                  backdrop-blur-md shadow-2xl z-20 cursor-pointer transform transition-all duration-700 
-                  ease-out hover:scale-[1.03] ${getAnimationClass()}`}
-      onClick={() => setExpanded(!expanded)}
+      className={`bg-black/40 border border-white/20 rounded-2xl p-4 sm:p-6 md:p-10 w-[95%] sm:w-[85%] md:w-[70%] max-w-3xl text-center 
+                  backdrop-blur-md shadow-2xl z-20 transform transition-all duration-700 
+                  ease-out hover:scale-[1.01] md:hover:scale-[1.03] ${getAnimationClass()}`}
     >
-      <div className="max-h-[75vh] overflow-y-auto pr-2 no-scrollbar">
-        <h2 className="text-6xl font-extrabold mb-4 animate-bounce-in">
+      <div className="max-h-[75vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        <h2 className="text-3xl sm:text-4xl md:text-6xl font-extrabold mb-3 md:mb-4 animate-bounce-in">
           {slide.title}
         </h2>
-        <p className="text-lg mb-2 opacity-80 animate-fade-in-delay-1">
+        <p className="text-sm sm:text-base md:text-lg mb-2 opacity-80 animate-fade-in-delay-1">
           {slide.subtitle}
         </p>
 
-        <div className="text-2xl my-6 animate-fade-in-delay-2">
+        <div className="text-lg sm:text-xl md:text-2xl my-4 md:my-6 animate-fade-in-delay-2">
           {slide.mainStat && (
-            <div className="text-5xl font-bold text-purple-300 mb-2 animate-pop-in">
+            <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-purple-300 mb-2 animate-pop-in">
               {slide.mainStat}
             </div>
           )}
-          <p>{slide.summary}</p>
+          <p className="px-2">{slide.summary}</p>
         </div>
 
         {/* 🆕 AI SLIDE SPECIAL RENDERING */}
@@ -154,38 +153,52 @@ function SlideCard({ slide, direction }) {
         ) : (
           <>
             {slide.stats && slide.stats.length > 0 && (
-              <div className="grid grid-cols-2 gap-4 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
                 {slide.stats.map((stat, idx) => (
                   <div
                     key={idx}
-                    className="bg-white/10 rounded-lg p-4 hover:bg-white/20 transition-all duration-300 hover:scale-110 animate-fade-in-up"
+                    className="bg-white/10 rounded-lg p-3 md:p-4 hover:bg-white/20 transition-all duration-300 hover:scale-105 md:hover:scale-110 animate-fade-in-up"
                     style={{ animationDelay: `${idx * 100}ms` }}
                   >
-                    <div className="text-3xl font-bold text-blue-300">{stat.value}</div>
-                    <div className="text-sm opacity-80">{stat.label}</div>
+                    <div className="text-2xl md:text-3xl font-bold text-blue-300">{stat.value}</div>
+                    <div className="text-xs md:text-sm opacity-80">{stat.label}</div>
                   </div>
                 ))}
               </div>
             )}
 
             {slide.networkData && (
-              <div className="flex justify-center mt-8">
-                <svg ref={svgRef} width="400" height="400" />
+              <div className="flex justify-center mt-6 md:mt-8 overflow-x-auto">
+                <svg ref={svgRef} width="300" height="300" className="sm:w-[400px] sm:h-[400px]" viewBox="0 0 400 400" />
               </div>
             )}
           </>
         )}
 
+        {slide.details && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
+            className="mt-4 px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 rounded-lg text-sm font-semibold transition-all duration-300 active:scale-95"
+          >
+            {expanded ? "Hide Details ▲" : "Show More Details ▼"}
+          </button>
+        )}
+
         {expanded && slide.details && (
-          <div className="mt-6 text-lg text-gray-200 border-t border-white/20 pt-4 animate-expand whitespace-pre-line text-left">
+          <div className="mt-4 text-sm sm:text-base md:text-lg text-gray-200 border-t border-white/20 pt-4 animate-expand whitespace-pre-line text-left px-2">
             {slide.details}
           </div>
         )}
       </div>
 
       <style jsx>{`
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
         @keyframes bounce-in {
           0% { transform: scale(0.3); opacity: 0; }
           50% { transform: scale(1.05); }
@@ -240,11 +253,11 @@ function PersonalitiesContent({ data, expanded }) {
   const displayData = expanded ? data : data.slice(0, 4);
   
   return (
-    <div className="grid grid-cols-2 gap-4 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
       {displayData.map((person, idx) => (
-        <div key={idx} className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg p-4 text-left animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-          <div className="font-bold text-xl text-purple-300 mb-2">{person.name}</div>
-          <div className="text-sm space-y-1">
+        <div key={idx} className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg p-3 md:p-4 text-left animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+          <div className="font-bold text-lg md:text-xl text-purple-300 mb-2">{person.name}</div>
+          <div className="text-xs md:text-sm space-y-1">
             <div><span className="text-blue-300">Style:</span> {person.style}</div>
             <div><span className="text-blue-300">Tone:</span> {person.tone}</div>
             <div className="flex flex-wrap gap-1 mt-2">
@@ -271,11 +284,11 @@ function AlignmentsContent({ data, expanded }) {
   const displayData = expanded ? data : data.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-2 gap-4 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
       {displayData.map((person, idx) => (
-        <div key={idx} className={`bg-gradient-to-br ${alignmentColors[person.alignment] || 'from-gray-500/20 to-gray-600/20'} rounded-lg p-4 text-left animate-fade-in-up`} style={{ animationDelay: `${idx * 100}ms` }}>
-          <div className="font-bold text-xl text-purple-300 mb-1">{person.name}</div>
-          <div className="text-sm font-semibold text-blue-300 mb-2">{person.alignment}</div>
+        <div key={idx} className={`bg-gradient-to-br ${alignmentColors[person.alignment] || 'from-gray-500/20 to-gray-600/20'} rounded-lg p-3 md:p-4 text-left animate-fade-in-up`} style={{ animationDelay: `${idx * 100}ms` }}>
+          <div className="font-bold text-lg md:text-xl text-purple-300 mb-1">{person.name}</div>
+          <div className="text-xs md:text-sm font-semibold text-blue-300 mb-2">{person.alignment}</div>
           <div className="text-xs opacity-80 italic">"{person.reason}"</div>
         </div>
       ))}
@@ -294,17 +307,17 @@ function RolesContent({ data, expanded }) {
   const displayData = expanded ? rolesArray : rolesArray.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-2 gap-4 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
       {displayData.map((roleData, idx) => (
-        <div key={idx} className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg p-4 text-left animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+        <div key={idx} className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg p-3 md:p-4 text-left animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-3xl">{roleEmojis[roleData.role] || '🎭'}</span>
+            <span className="text-2xl md:text-3xl">{roleEmojis[roleData.role] || '🎭'}</span>
             <div>
-              <div className="font-bold text-lg text-purple-300 capitalize">{roleData.role.replace(/_/g, ' ')}</div>
+              <div className="font-bold text-base md:text-lg text-purple-300 capitalize">{roleData.role.replace(/_/g, ' ')}</div>
               <div className="text-xs opacity-60">{roleData.score}/100</div>
             </div>
           </div>
-          <div className="font-bold text-md">{roleData.name}</div>
+          <div className="font-bold text-sm md:text-md">{roleData.name}</div>
           <div className="text-xs opacity-80 italic mt-1">"{roleData.reason}"</div>
         </div>
       ))}
@@ -317,15 +330,15 @@ function TopicsContent({ data, expanded }) {
   const displayData = expanded ? data : data.slice(0, 4);
 
   return (
-    <div className="space-y-3 mt-6">
+    <div className="space-y-2 md:space-y-3 mt-4 md:mt-6">
       {displayData.map((topic, idx) => (
-        <div key={idx} className="bg-white/10 rounded-lg p-4 text-left hover:bg-white/15 transition-all animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-2xl">{vibeEmojis[topic.vibe] || '💭'}</span>
-            <div className="font-bold text-lg text-purple-300">{topic.topic}</div>
-            <span className="ml-auto text-sm bg-white/10 px-2 py-1 rounded-full">{topic.message_count} msgs</span>
+        <div key={idx} className="bg-white/10 rounded-lg p-3 md:p-4 text-left hover:bg-white/15 transition-all animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <span className="text-xl md:text-2xl">{vibeEmojis[topic.vibe] || '💭'}</span>
+            <div className="font-bold text-base md:text-lg text-purple-300 flex-1">{topic.topic}</div>
+            <span className="text-xs md:text-sm bg-white/10 px-2 py-1 rounded-full whitespace-nowrap">{topic.message_count} msgs</span>
           </div>
-          <div className="text-sm opacity-80 italic">{topic.description}</div>
+          <div className="text-xs md:text-sm opacity-80 italic">{topic.description}</div>
         </div>
       ))}
     </div>
@@ -336,15 +349,15 @@ function VocabularyContent({ data, expanded }) {
   const displayData = expanded ? data : data.slice(0, 4);
 
   return (
-    <div className="grid grid-cols-2 gap-4 mt-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
       {displayData.map((word, idx) => (
-        <div key={idx} className="bg-white/10 rounded-lg p-4 text-left hover:bg-white/15 transition-all animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-          <div className="flex items-baseline justify-between mb-2">
-            <div className="font-bold text-2xl text-purple-300">{word.word}</div>
-            <span className="text-xs bg-white/20 px-2 py-1 rounded-full capitalize">{word.frequency}</span>
+        <div key={idx} className="bg-white/10 rounded-lg p-3 md:p-4 text-left hover:bg-white/15 transition-all animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
+          <div className="flex items-baseline justify-between mb-2 gap-2">
+            <div className="font-bold text-xl md:text-2xl text-purple-300 break-words">{word.word}</div>
+            <span className="text-xs bg-white/20 px-2 py-1 rounded-full capitalize whitespace-nowrap">{word.frequency}</span>
           </div>
-          <div className="text-sm mb-1"><span className="text-blue-300">Means:</span> {word.meaning}</div>
-          <div className="text-xs opacity-70 italic">"{word.example}"</div>
+          <div className="text-xs md:text-sm mb-1"><span className="text-blue-300">Means:</span> {word.meaning}</div>
+          <div className="text-xs opacity-70 italic break-words">"{word.example}"</div>
         </div>
       ))}
     </div>

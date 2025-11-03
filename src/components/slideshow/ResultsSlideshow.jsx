@@ -147,31 +147,35 @@ export default function ResultsSlideshow({ slides: slidesProp = null }) {
 // Quiz Launcher Slide Component
 function QuizLauncherSlide({ onLaunchQuiz }) {
   return (
-    <div className="bg-black/40 border border-white/20 rounded-2xl p-10 w-[70%] max-w-3xl text-center backdrop-blur-md shadow-2xl z-20 transform transition-all duration-700 ease-out hover:scale-[1.03]">
-      <div className="max-h-[75vh] overflow-y-auto pr-2">
-        <div className="text-8xl mb-6 animate-bounce-slow">🎮</div>
-        <h2 className="text-6xl font-extrabold mb-4 animate-bounce-in">Ready for a Challenge?</h2>
-        <p className="text-2xl mb-8 opacity-80">
+    <div className="bg-black/40 border border-white/20 rounded-xl sm:rounded-2xl p-6 sm:p-10 w-full max-w-3xl text-center backdrop-blur-md shadow-2xl z-20 transform transition-all duration-700 ease-out hover:scale-[1.02] sm:hover:scale-[1.03]">
+      <div className="max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="text-6xl sm:text-8xl mb-4 sm:mb-6 animate-bounce-slow">🎮</div>
+        <h2 className="text-4xl sm:text-6xl font-extrabold mb-3 sm:mb-4 animate-bounce-in">
+          Ready for a Challenge?
+        </h2>
+        <p className="text-lg sm:text-2xl mb-6 sm:mb-8 opacity-80">
           Think you know your group chat?
         </p>
 
-        <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-2xl p-8 mb-8 border border-white/10">
-          <h3 className="text-3xl font-bold mb-4 text-purple-300">🔥 Dankest Messages Quiz</h3>
-          <div className="space-y-3 text-left text-lg">
-            <div className="flex items-center gap-3 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
-              <span className="text-2xl">💬</span>
+        <div className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-xl sm:rounded-2xl p-6 sm:p-8 mb-6 sm:mb-8 border border-white/10">
+          <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-purple-300">
+            Who said it Quiz
+          </h3>
+          <div className="space-y-2.5 sm:space-y-3 text-left text-base sm:text-lg">
+            <div className="flex items-center gap-2 sm:gap-3 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+              <span className="text-xl sm:text-2xl">💬</span>
               <span>Guess who said the wildest messages</span>
             </div>
-            <div className="flex items-center gap-3 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
-              <span className="text-2xl">⚡</span>
+            <div className="flex items-center gap-2 sm:gap-3 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+              <span className="text-xl sm:text-2xl">⚡</span>
               <span>10 rounds of pure chaos</span>
             </div>
-            <div className="flex items-center gap-3 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
-              <span className="text-2xl">🏆</span>
+            <div className="flex items-center gap-2 sm:gap-3 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+              <span className="text-xl sm:text-2xl">🏆</span>
               <span>Earn points and build streaks</span>
             </div>
-            <div className="flex items-center gap-3 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
-              <span className="text-2xl">🎯</span>
+            <div className="flex items-center gap-2 sm:gap-3 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+              <span className="text-xl sm:text-2xl">🎯</span>
               <span>Test your group chat knowledge</span>
             </div>
           </div>
@@ -179,12 +183,12 @@ function QuizLauncherSlide({ onLaunchQuiz }) {
 
         <button
           onClick={onLaunchQuiz}
-          className="w-full px-12 py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-2xl transition-all duration-300 hover:scale-105 shadow-lg animate-pulse-glow"
+          className="w-full px-8 sm:px-12 py-4 sm:py-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-xl sm:text-2xl transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg animate-pulse-glow"
         >
           🎮 Start Quiz
         </button>
 
-        <p className="mt-6 text-sm opacity-60">
+        <p className="mt-4 sm:mt-6 text-xs sm:text-sm opacity-60">
           Click to begin the ultimate group chat challenge!
         </p>
       </div>
@@ -223,6 +227,15 @@ function QuizLauncherSlide({ onLaunchQuiz }) {
         }
         .animate-pulse-glow {
           animation: pulse-glow 2s infinite;
+        }
+        
+        /* Custom scrollbar styles - hidden but functional */
+        .custom-scrollbar {
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>

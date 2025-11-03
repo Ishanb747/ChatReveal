@@ -35,7 +35,6 @@ function DankQuizGame({ onComplete }) {
         correctAnswer: msg.sender,
         category: msg.category,
         dankScore: msg.dank_score,
-        why: msg.why,
         options: generateOptions(msg.sender, participants)
       }));
 
@@ -66,7 +65,7 @@ function DankQuizGame({ onComplete }) {
   };
 
   const handleAnswerSelect = (answer) => {
-    if (showResult) return; // Prevent changing answer after submission
+    if (showResult) return;
     setSelectedAnswer(answer);
   };
 
@@ -79,7 +78,6 @@ function DankQuizGame({ onComplete }) {
     setShowResult(true);
 
     if (isCorrect) {
-      // Points based on dank score and streak
       const basePoints = question.dankScore || 80;
       const streakBonus = streak * 10;
       const points = basePoints + streakBonus;
@@ -111,7 +109,6 @@ function DankQuizGame({ onComplete }) {
     setStreak(0);
     setBestStreak(0);
     
-    // Reshuffle questions
     const aiResultsStr = localStorage.getItem('chatAnalysisResults');
     const aiData = JSON.parse(aiResultsStr);
     const dankMessages = aiData.dankest_messages || [];
@@ -123,7 +120,6 @@ function DankQuizGame({ onComplete }) {
       correctAnswer: msg.sender,
       category: msg.category,
       dankScore: msg.dank_score,
-      why: msg.why,
       options: generateOptions(msg.sender, participants)
     }));
 
@@ -133,7 +129,7 @@ function DankQuizGame({ onComplete }) {
   if (!quizData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <div className="text-white text-2xl">Loading quiz...</div>
+        <div className="text-white text-xl md:text-2xl">Loading quiz...</div>
       </div>
     );
   }
@@ -143,38 +139,38 @@ function DankQuizGame({ onComplete }) {
     const percentage = Math.round((score / maxPossibleScore) * 100);
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
-        <div className="bg-black/40 border border-white/20 rounded-3xl p-12 backdrop-blur-md shadow-2xl max-w-2xl w-full text-center text-white">
-          <div className="text-8xl mb-6">🏆</div>
-          <h1 className="text-5xl font-extrabold mb-4">Quiz Complete!</h1>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 sm:p-8">
+        <div className="bg-black/40 border border-white/20 rounded-2xl sm:rounded-3xl p-6 sm:p-12 backdrop-blur-md shadow-2xl max-w-2xl w-full text-center text-white">
+          <div className="text-6xl sm:text-8xl mb-4 sm:mb-6">🏆</div>
+          <h1 className="text-3xl sm:text-5xl font-extrabold mb-3 sm:mb-4">Quiz Complete!</h1>
           
-          <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-2xl p-8 my-6">
-            <div className="text-7xl font-bold text-purple-300 mb-2">{score}</div>
-            <div className="text-2xl mb-4">Total Points</div>
-            <div className="text-lg opacity-80">{percentage}% accuracy</div>
+          <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 rounded-xl sm:rounded-2xl p-6 sm:p-8 my-4 sm:my-6">
+            <div className="text-5xl sm:text-7xl font-bold text-purple-300 mb-2">{score}</div>
+            <div className="text-xl sm:text-2xl mb-2 sm:mb-4">Total Points</div>
+            <div className="text-base sm:text-lg opacity-80">{percentage}% accuracy</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-white/10 rounded-xl p-4">
-              <div className="text-3xl font-bold text-blue-300">{bestStreak}</div>
-              <div className="text-sm opacity-80">Best Streak</div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <div className="text-2xl sm:text-3xl font-bold text-blue-300">{bestStreak}</div>
+              <div className="text-xs sm:text-sm opacity-80">Best Streak</div>
             </div>
-            <div className="bg-white/10 rounded-xl p-4">
-              <div className="text-3xl font-bold text-green-300">{quizData.totalRounds}</div>
-              <div className="text-sm opacity-80">Questions Completed</div>
+            <div className="bg-white/10 rounded-lg sm:rounded-xl p-3 sm:p-4">
+              <div className="text-2xl sm:text-3xl font-bold text-green-300">{quizData.totalRounds}</div>
+              <div className="text-xs sm:text-sm opacity-80">Questions Completed</div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <button
               onClick={handleRestart}
-              className="w-full px-8 py-4 bg-purple-600 hover:bg-purple-700 rounded-xl font-bold text-lg transition-all duration-300 hover:scale-105"
+              className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-purple-600 hover:bg-purple-700 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 hover:scale-105 active:scale-95"
             >
               🔄 Play Again
             </button>
             <button
               onClick={onComplete}
-              className="w-full px-8 py-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-lg transition-all duration-300"
+              className="w-full px-6 sm:px-8 py-3 sm:py-4 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 active:scale-95"
             >
               📊 Back to Wrapped
             </button>
@@ -186,50 +182,49 @@ function DankQuizGame({ onComplete }) {
 
   const question = quizData.questions[currentRound];
   const isCorrect = showResult && selectedAnswer === question.correctAnswer;
-  const isWrong = showResult && selectedAnswer !== question.correctAnswer;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-0 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+        <div className="absolute top-0 right-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
       </div>
 
-      <div className="bg-black/40 border border-white/20 rounded-3xl p-10 backdrop-blur-md shadow-2xl max-w-4xl w-full text-white relative z-10">
+      <div className="bg-black/40 border border-white/20 rounded-2xl sm:rounded-3xl p-5 sm:p-10 backdrop-blur-md shadow-2xl max-w-4xl w-full text-white relative z-10 max-h-[95vh] overflow-y-auto custom-scrollbar">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-6 sm:mb-8 flex-wrap gap-3">
           <div>
-            <div className="text-sm opacity-60 mb-1">Round {currentRound + 1}/{quizData.totalRounds}</div>
-            <div className="text-3xl font-bold">
-              💎 {score} <span className="text-lg opacity-60">points</span>
+            <div className="text-xs sm:text-sm opacity-60 mb-1">Round {currentRound + 1}/{quizData.totalRounds}</div>
+            <div className="text-2xl sm:text-3xl font-bold">
+              💎 {score} <span className="text-sm sm:text-lg opacity-60">points</span>
             </div>
           </div>
           <div className="text-right">
             {streak > 0 && (
-              <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full px-4 py-2 border border-yellow-500/30">
-                <span className="text-2xl">🔥</span>
-                <span className="ml-2 font-bold text-yellow-300">{streak} Streak</span>
+              <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 border border-yellow-500/30">
+                <span className="text-xl sm:text-2xl">🔥</span>
+                <span className="ml-1 sm:ml-2 font-bold text-yellow-300 text-sm sm:text-base">{streak} Streak</span>
               </div>
             )}
           </div>
         </div>
 
         {/* Category Badge */}
-        <div className="inline-block bg-purple-500/20 border border-purple-500/30 rounded-full px-4 py-2 mb-6">
-          <span className="text-sm font-semibold text-purple-300">{question.category}</span>
+        <div className="inline-block bg-purple-500/20 border border-purple-500/30 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-4 sm:mb-6">
+          <span className="text-xs sm:text-sm font-semibold text-purple-300">{question.category}</span>
         </div>
 
         {/* Question */}
-        <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-2xl p-8 mb-8 border border-white/10">
-          <h2 className="text-2xl font-bold mb-4">Who said this?</h2>
-          <p className="text-3xl font-bold leading-relaxed italic">
+        <div className="bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-xl sm:rounded-2xl p-5 sm:p-8 mb-6 sm:mb-8 border border-white/10">
+          <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4">Who said this?</h2>
+          <p className="text-xl sm:text-3xl font-bold leading-relaxed italic break-words">
             "{question.message}"
           </p>
         </div>
 
         {/* Options */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {question.options.map((option, idx) => {
             const isSelected = selectedAnswer === option;
             const isCorrectOption = showResult && option === question.correctAnswer;
@@ -254,11 +249,11 @@ function DankQuizGame({ onComplete }) {
                 key={idx}
                 onClick={() => handleAnswerSelect(option)}
                 disabled={showResult}
-                className={`${bgClass} ${borderClass} border-2 rounded-xl p-6 font-bold text-xl transition-all duration-300 hover:scale-105 disabled:cursor-not-allowed disabled:hover:scale-100 relative`}
+                className={`${bgClass} ${borderClass} border-2 rounded-xl p-4 sm:p-6 font-bold text-base sm:text-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100 relative break-words`}
               >
                 {option}
-                {isCorrectOption && <span className="absolute top-2 right-2 text-2xl">✅</span>}
-                {isWrongOption && <span className="absolute top-2 right-2 text-2xl">❌</span>}
+                {isCorrectOption && <span className="absolute top-2 right-2 text-xl sm:text-2xl">✅</span>}
+                {isWrongOption && <span className="absolute top-2 right-2 text-xl sm:text-2xl">❌</span>}
               </button>
             );
           })}
@@ -266,18 +261,15 @@ function DankQuizGame({ onComplete }) {
 
         {/* Result Message */}
         {showResult && (
-          <div className={`${isCorrect ? 'bg-green-500/20 border-green-500/30' : 'bg-red-500/20 border-red-500/30'} border rounded-xl p-6 mb-6 animate-fade-in`}>
-            <div className="text-2xl font-bold mb-2">
+          <div className={`${isCorrect ? 'bg-green-500/20 border-green-500/30' : 'bg-red-500/20 border-red-500/30'} border rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 animate-fade-in`}>
+            <div className="text-xl sm:text-2xl font-bold mb-2">
               {isCorrect ? '🎉 Correct!' : '❌ Wrong!'}
             </div>
-            <div className="text-lg mb-2">
+            <div className="text-base sm:text-lg mb-2 break-words">
               {isCorrect 
                 ? `+${question.dankScore + (streak - 1) * 10} points ${streak > 1 ? `(+${(streak - 1) * 10} streak bonus!)` : ''}`
                 : `The correct answer was: ${question.correctAnswer}`
               }
-            </div>
-            <div className="text-sm opacity-80 italic">
-              Why it's dank: {question.why}
             </div>
           </div>
         )}
@@ -288,14 +280,14 @@ function DankQuizGame({ onComplete }) {
             <button
               onClick={handleSubmit}
               disabled={!selectedAnswer}
-              className="px-12 py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded-xl font-bold text-lg sm:text-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100"
             >
               Submit Answer
             </button>
           ) : (
             <button
               onClick={handleNext}
-              className="px-12 py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold text-xl transition-all duration-300 hover:scale-105"
+              className="w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 rounded-xl font-bold text-lg sm:text-xl transition-all duration-300 hover:scale-105 active:scale-95"
             >
               {currentRound + 1 >= quizData.totalRounds ? '🏁 Finish' : 'Next Question →'}
             </button>
@@ -322,6 +314,15 @@ function DankQuizGame({ onComplete }) {
         }
         .animate-fade-in {
           animation: fade-in 0.3s ease-out;
+        }
+        
+        /* Custom scrollbar styles - hidden but functional */
+        .custom-scrollbar {
+          scrollbar-width: none; /* Firefox */
+          -ms-overflow-style: none; /* IE and Edge */
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          display: none; /* Chrome, Safari, Opera */
         }
       `}</style>
     </div>
