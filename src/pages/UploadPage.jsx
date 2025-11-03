@@ -23,7 +23,7 @@ const UploadPage = () => {
     setIsDragging(false);
     
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && (droppedFile.type === 'text/plain' || droppedFile.name.endsWith('.zip'))) {
+    if (droppedFile && (droppedFile.type === 'text/plain' || droppedFile.name.endsWith('.zip') || droppedFile.type === 'application/zip' || droppedFile.type === 'application/x-zip-compressed')) {
       setFile(droppedFile);
     } else {
       alert('Please upload a .txt or .zip file');
@@ -32,10 +32,10 @@ const UploadPage = () => {
 
   const handleFileInput = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.type === 'text/plain') {
+    if (selectedFile && (selectedFile.type === 'text/plain' || selectedFile.name.endsWith('.zip') || selectedFile.type === 'application/zip' || selectedFile.type === 'application/x-zip-compressed')) {
       setFile(selectedFile);
     } else {
-      alert('Please upload a .txt file');
+      alert('Please upload a .txt or .zip file');
     }
   };
 
@@ -178,6 +178,39 @@ const UploadPage = () => {
     return stats;
   };
 
+  const extractTextFromZip = async (zipFile) => {
+    try {
+      // Dynamically import JSZip
+      const JSZip = (await import('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')).default;
+      
+      const zip = new JSZip();
+      const contents = await zip.loadAsync(zipFile);
+      
+      // Find the first .txt file in the zip
+      let textFile = null;
+      let textFileName = null;
+      
+      for (const [filename, file] of Object.entries(contents.files)) {
+        if (filename.endsWith('.txt') && !file.dir) {
+          textFile = file;
+          textFileName = filename;
+          break;
+        }
+      }
+      
+      if (!textFile) {
+        throw new Error('No .txt file found in the ZIP archive');
+      }
+      
+      // Extract the text content
+      const text = await textFile.async('text');
+      return text;
+    } catch (error) {
+      console.error('Error extracting ZIP:', error);
+      throw new Error('Failed to extract text from ZIP file. Please ensure it contains a valid .txt file.');
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!file) return;
     
@@ -185,7 +218,16 @@ const UploadPage = () => {
     
     try {
       // Read file content
-      const text = await file.text();
+      let text;
+      
+      // Check if file is a ZIP
+      if (file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+        // Extract text from ZIP file
+        text = await extractTextFromZip(file);
+      } else {
+        // Read text file directly
+        text = await file.text();
+      }
       
       // Parse chat
       const { messages, format } = parseChat(text);
@@ -271,7 +313,7 @@ const UploadPage = () => {
           >
             <input
               type="file"
-              accept=".txt"
+              accept=".txt,.zip"
               onChange={handleFileInput}
               className="hidden"
               id="file-input"
@@ -298,7 +340,7 @@ const UploadPage = () => {
                     Choose File
                   </label>
                   <p className="text-xs text-gray-500 mt-4">
-                    Supports WhatsApp, Telegram, and Discord .txt/zip exports
+                    Supports WhatsApp, Telegram, and Discord exports (.txt or .zip)
                   </p>
                 </>
               ) : (
