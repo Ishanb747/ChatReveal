@@ -23,10 +23,10 @@ const UploadPage = () => {
     setIsDragging(false);
     
     const droppedFile = e.dataTransfer.files[0];
-    if (droppedFile && droppedFile.type === 'text/plain') {
+    if (droppedFile && (droppedFile.type === 'text/plain' || droppedFile.name.endsWith('.zip'))) {
       setFile(droppedFile);
     } else {
-      alert('Please upload a .txt file');
+      alert('Please upload a .txt or .zip file');
     }
   };
 
@@ -298,7 +298,7 @@ const UploadPage = () => {
                     Choose File
                   </label>
                   <p className="text-xs text-gray-500 mt-4">
-                    Supports WhatsApp, Telegram, and Discord .txt exports
+                    Supports WhatsApp, Telegram, and Discord .txt/zip exports
                   </p>
                 </>
               ) : (
