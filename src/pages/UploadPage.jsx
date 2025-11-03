@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, Sparkles, Shield, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import JSZip from 'jszip';
 
 const UploadPage = () => {
   const [isDragging, setIsDragging] = useState(false);
@@ -180,29 +181,14 @@ const UploadPage = () => {
 
   const extractTextFromZip = async (zipFile) => {
     try {
-      // Dynamically import JSZip
-      const JSZip = (await import('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')).default;
+      const zip = await JSZip.loadAsync(zipFile); // No need for `new`
       
-      const zip = new JSZip();
-      const contents = await zip.loadAsync(zipFile);
+      const textFile = Object.keys(zip.files)
+        .map(name => zip.files[name])
+        .find(file => file.name.endsWith('.txt') && !file.dir);
+
+      if (!textFile) throw new Error('No .txt file found in the ZIP archive');
       
-      // Find the first .txt file in the zip
-      let textFile = null;
-      let textFileName = null;
-      
-      for (const [filename, file] of Object.entries(contents.files)) {
-        if (filename.endsWith('.txt') && !file.dir) {
-          textFile = file;
-          textFileName = filename;
-          break;
-        }
-      }
-      
-      if (!textFile) {
-        throw new Error('No .txt file found in the ZIP archive');
-      }
-      
-      // Extract the text content
       const text = await textFile.async('text');
       return text;
     } catch (error) {
@@ -210,6 +196,7 @@ const UploadPage = () => {
       throw new Error('Failed to extract text from ZIP file. Please ensure it contains a valid .txt file.');
     }
   };
+
 
   const handleAnalyze = async () => {
     if (!file) return;
