@@ -514,36 +514,7 @@ Contributions are welcome! Here's how:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
 
-## 🙏 Acknowledgments
-
-- **Groq** for providing blazing-fast AI inference
-- **Meta** for the LLama model series
-- **Vercel** for serverless infrastructure
-- The open-source community for amazing tools
-
----
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/chatreveal/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/chatreveal/discussions)
-- **Email**: support@chatreveal.com
-
----
-
-## 🎯 Roadmap
-
-- [ ] Add support for iMessage exports
-- [ ] Implement data export (PDF/PNG reports)
-- [ ] Add custom AI model selection
-- [ ] Create browser extension for direct exports
-- [ ] Multi-language support
-- [ ] Mobile app version
-
----
-
-**Made with ❤️ by the ChatReveal team**
+**Made with ❤️ by Ishanb747 **
 
 *Privacy-focused • AI-powered • Open source*
