@@ -69,13 +69,21 @@ export default function ResultsPage() {
         <div className="bg-red-900/30 backdrop-blur-lg border border-red-500/30 rounded-2xl p-8 max-w-2xl">
           <div className="text-6xl mb-4">❌</div>
           <h2 className="text-3xl font-bold text-white mb-4">Analysis Failed</h2>
-          <p className="text-red-200 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
-          >
-            Go Back Home
-          </button>
+          <p className="text-red-200 mb-6 whitespace-pre-wrap break-words">{error}</p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+            >
+              Go Back Home
+            </button>
+          </div>
         </div>
       </div>
     );
