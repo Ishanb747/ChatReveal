@@ -4,7 +4,7 @@
 
 ChatReveal uses advanced AI to analyze your WhatsApp, Telegram, or Discord chat exports and reveal hidden personalities, dynamics, and the funniest moments in your conversations—all processed securely in your browser and on serverless infrastructure.
 
-🔗 **Live Demo**: [chatreveal.vercel.app](https://chatreveal.vercel.app)
+🔗 **Live Demo**: [chat-reveal.vercel.app](https://chat-reveal.vercel.app)
 
 ---
 
@@ -51,7 +51,7 @@ ChatReveal uses advanced AI to analyze your WhatsApp, Telegram, or Discord chat 
 
 ## 🤖 How AI Powers ChatReveal
 
-ChatReveal uses **Groq's LLama 3.1 70B** model for ultra-fast, cost-effective chat analysis. Here's how the AI works:
+ChatReveal calls [Groq's Chat Completions API](https://console.groq.com/docs/api-reference) (`POST https://api.groq.com/openai/v1/chat/completions`) using **`openai/gpt-oss-120b`** by default. Override the model with the `GROQ_MODEL` environment variable. Here's how the AI works:
 
 ### **1. Multi-Strategy Message Sampling**
 
@@ -102,14 +102,14 @@ score += emotionalWords * 3;
 
 ### **2. Two-Phase AI Analysis**
 
-#### **Phase 1: Core Analysis** (~400 messages, 2.5K tokens)
+#### **Phase 1: Core Analysis** (~400 messages, up to 4K completion tokens)
 Focuses on understanding people and relationships:
 - **Personalities**: Communication style, tone, key traits
 - **Roles**: Who's the therapist, comedian, voice of reason?
 - **Alignments**: D&D-style moral compass for each person
 - **Relationships**: Closest pairs and their bond types
 
-#### **Phase 2: Content Analysis** (~600 messages, 4K tokens)
+#### **Phase 2: Content Analysis** (~600 messages, up to 8K completion tokens)
 Focuses on content and memorable moments:
 - **Vocabulary**: Group-specific slang, inside jokes
 - **Topics**: Main conversation themes (5-7 topics)
@@ -196,11 +196,12 @@ For EACH message:
                │
                ▼
 ┌─────────────────────────────────────┐
-│  Groq API (LLama 3.1 70B)           │
+│  Groq Chat Completions              │
+│  • Model: openai/gpt-oss-120b       │
 │  • Phase 1: Core Analysis           │
 │  • Phase 2: Content Analysis        │
 │  • Temperature: 0.4-0.7             │
-│  • Max tokens: 2.5K-4K              │
+│  • max_completion_tokens: 4K-8K     │
 └──────────────┬──────────────────────┘
                │
                ▼
@@ -348,8 +349,8 @@ Your Device → Browser Parser → Sampled Messages → Serverless API → Groq 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/chatreveal.git
-cd chatreveal
+git clone https://github.com/Ishanb747/ChatReveal.git
+cd ChatReveal
 ```
 
 2. **Install dependencies**
@@ -359,26 +360,26 @@ npm install
 
 3. **Set up environment variables**
 
-Create `.env` file:
-```env
-# Required: At least one Groq API key
-GROQ_API_KEY_1=gsk_...
-GROQ_API_KEY_2=gsk_...
-GROQ_API_KEY_3=gsk_...
-
-# Optional: For enhanced rate limit handling
-NODE_ENV=development
+```bash
+cp .env.example .env
 ```
 
-4. **Run development server**
+Edit `.env` and set at least one key. Names only — never commit the file:
+
+| Name | Required | Purpose |
+| --- | --- | --- |
+| `GROQ_API_KEY` | One of this or `GROQ_API_KEY_1` | Groq API key from [console.groq.com/keys](https://console.groq.com/keys) |
+| `GROQ_API_KEY_1` … `GROQ_API_KEY_5` | Optional extras | Rotated with `GROQ_API_KEY` when rate limits hit |
+| `GROQ_MODEL` | No | Chat model id. Defaults to `openai/gpt-oss-120b` |
+
+4. **Run the app**
 ```bash
 npm run dev
 ```
 
-5. **Open browser**
-```
-http://localhost:5173
-```
+`npm run dev` serves the UI and the `/api/groq` proxy (it reads `.env`). Open `http://localhost:5173`.
+
+On Vercel, the same proxy is the serverless function in `api/groq.js`.
 
 ### **Project Structure**
 ```
@@ -392,13 +393,15 @@ chatreveal/
 │   │   ├── UploadPage.jsx     # File upload & parsing
 │   │   └── ResultsPage.jsx    # AI analysis trigger
 │   ├── utils/
-│   │   ├── Llm.js             # WhatsAppAnalyzer class
-│   │   ├── badgeCalculation.js # Badge logic
-│   │   └── getAISlides.js     # Slide generation
+│   │   ├── Llm.js              # WhatsAppAnalyzer class
+│   │   ├── badgeCalculations.js
+│   │   └── getAISlides.js      # Slide generation
 │   └── App.jsx
+├── server/
+│   └── groqChat.js             # Groq request builder (shared)
 ├── public/
-├── package.json
-└── vercel.json                 # Vercel config
+├── .env.example
+└── package.json
 ```
 
 ---
@@ -407,36 +410,24 @@ chatreveal/
 
 ### **Deploy to Vercel (Recommended)**
 
-1. **Push to GitHub**
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/yourusername/chatreveal.git
-git push -u origin main
-```
-
-2. **Import on Vercel**
+1. **Import on Vercel**
 - Go to [vercel.com/new](https://vercel.com/new)
-- Import your GitHub repository
-- Vercel auto-detects Vite configuration
+- Import the GitHub repository
+- Vercel auto-detects Vite and the `api/` serverless function
 
-3. **Add environment variables**
-In Vercel dashboard → Settings → Environment Variables:
+2. **Add environment variables**
+In the Vercel project → Settings → Environment Variables, set the same names as `.env.example`:
 ```
-GROQ_API_KEY_1 = gsk_...
-GROQ_API_KEY_2 = gsk_...
-GROQ_API_KEY_3 = gsk_...
+GROQ_API_KEY
+GROQ_MODEL          # optional, default openai/gpt-oss-120b
+GROQ_API_KEY_1      # optional, still supported
 ```
+At least one of `GROQ_API_KEY` or `GROQ_API_KEY_1` is required. Create the key at [console.groq.com/keys](https://console.groq.com/keys).
 
-4. **Deploy**
-```bash
-# Or use Vercel CLI
-npm install -g vercel
-vercel --prod
-```
+3. **Deploy**
+Push to the connected branch, or run `vercel --prod` with the Vercel CLI.
 
-Your app will be live at: `https://your-project.vercel.app`
+The live demo is [https://chat-reveal.vercel.app](https://chat-reveal.vercel.app).
 
 ### **Alternative: Deploy to Netlify**
 
@@ -460,7 +451,7 @@ netlify deploy --prod
 ## 🛠️ Tech Stack
 
 ### **Frontend**
-- **React 18** - UI framework
+- **React 19** - UI framework
 - **Vite** - Build tool & dev server
 - **Tailwind CSS** - Utility-first styling
 - **Lucide React** - Icon library
@@ -471,8 +462,8 @@ netlify deploy --prod
 - **Node.js 18+** - Runtime environment
 
 ### **AI/ML**
-- **Groq Cloud** - AI inference platform
-- **LLama 3.1 70B** - Language model
+- **Groq Cloud** - AI inference platform ([Chat Completions](https://console.groq.com/docs/api-reference))
+- **`openai/gpt-oss-120b`** - default language model (`GROQ_MODEL` to override)
 - **Custom sampling algorithms** - Token optimization
 
 ### **Supporting Libraries**
@@ -512,7 +503,7 @@ Contributions are welcome! Here's how:
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 
 **Made with ❤️ by Ishanb747 **

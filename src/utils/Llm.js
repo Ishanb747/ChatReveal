@@ -13,6 +13,29 @@
  * - GROUP VOCABULARY: Unique words/phrases the group uses
  */
 
+function apiError(message, status) {
+  const error = new Error(message);
+  error.isApiError = true;
+  error.status = status;
+  return error;
+}
+
+function readErrorMessage(status, errorData) {
+  if (errorData && typeof errorData.message === 'string' && errorData.message.trim()) {
+    return errorData.message.trim();
+  }
+  if (status === 429) {
+    return 'Groq rate limit reached. Wait a minute and try again.';
+  }
+  if (status === 401 || status === 403) {
+    return 'The Groq API key is missing or invalid. Add GROQ_API_KEY or GROQ_API_KEY_1 on the server and try again.';
+  }
+  if (status === 500 && errorData?.error === 'missing_api_key') {
+    return 'Server configuration error: no Groq API key is set. Add GROQ_API_KEY or GROQ_API_KEY_1.';
+  }
+  return `The analysis service failed (${status}). Please try again.`;
+}
+
 class WhatsAppAnalyzer {
   constructor(chatData, apiEndpoint = '/api/groq') {
     this.data = chatData;
@@ -321,20 +344,12 @@ class WhatsAppAnalyzer {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async _callGroqAPI(messages, temperature = 0.4, maxTokens = 2500, retries = 5) {
-    const apiKeyIndex = this._getNextApiKeyIndex();
+  async _callGroqAPI(messages, temperature = 0.4, maxTokens = 4096, retries = 5) {
+    let apiKeyIndex = this._getNextApiKeyIndex();
     let lastError;
-    
+
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        // Add delay before retry (exponential backoff)
-        if (attempt > 0) {
-          const delayMs = Math.min(1000 * Math.pow(2, attempt), 10000); // Max 10s
-          console.log(`⏳ Retrying in ${(delayMs/1000).toFixed(1)}s... (Attempt ${attempt + 1}/${retries})`);
-          await this._sleep(delayMs);
-        }
-        
-        // Call serverless function instead of Groq directly
         const response = await fetch(this.apiUrl, {
           method: 'POST',
           headers: {
@@ -347,50 +362,60 @@ class WhatsAppAnalyzer {
             api_key_index: apiKeyIndex
           })
         });
-        
-        // Handle rate limits specifically
-        if (response.status === 429) {
+
+        if (response.status === 429 && attempt < retries - 1) {
           const data = await response.json().catch(() => ({}));
-          const retryAfter = data.retry_after || 2;
-          const waitTime = parseInt(retryAfter) * 1000;
-          lastError = new Error(`Rate limit exceeded (429)`);
-          
-          if (attempt < retries - 1) {
-            await this._sleep(waitTime);
-            continue;
-          }
+          const retryAfter = parseInt(data.retry_after, 10);
+          const waitTime = Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : Math.min(1000 * Math.pow(2, attempt + 1), 10000);
+          lastError = apiError(
+            readErrorMessage(429, data),
+            429
+          );
+          apiKeyIndex = this._getNextApiKeyIndex();
+          console.log(`⏳ Rate limited. Retrying in ${(waitTime / 1000).toFixed(1)}s... (Attempt ${attempt + 2}/${retries})`);
+          await this._sleep(waitTime);
+          continue;
         }
-        
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(`API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+          throw apiError(readErrorMessage(response.status, errorData), response.status);
         }
-        
+
         const data = await response.json();
-        return data.choices[0].message.content;
-        
+        const content = data?.choices?.[0]?.message?.content;
+        if (typeof content !== 'string' || !content.trim()) {
+          throw apiError('Groq returned an empty analysis. Please try again.', 502);
+        }
+        return content;
       } catch (error) {
         lastError = error;
-        
-        // If it's a network error or timeout, retry
-        if (attempt < retries - 1 && (
-          error.message.includes('fetch') || 
-          error.message.includes('network') ||
-          error.message.includes('timeout')
-        )) {
-          const delayMs = Math.min(1000 * Math.pow(2, attempt), 10000);
+
+        // Auth, rate-limit, and other API failures already have a message for the UI.
+        if (error.isApiError) {
+          throw error;
+        }
+
+        const message = String(error?.message || '');
+        const retryable = /fetch|network|timeout/i.test(message);
+        if (retryable && attempt < retries - 1) {
+          const delayMs = Math.min(1000 * Math.pow(2, attempt + 1), 10000);
+          console.log(`⏳ Retrying in ${(delayMs / 1000).toFixed(1)}s... (Attempt ${attempt + 2}/${retries})`);
           await this._sleep(delayMs);
           continue;
         }
-        
-        // For other errors, throw immediately
-        if (attempt === retries - 1) {
-          throw lastError;
+
+        if (retryable) {
+          throw apiError('Could not reach the analysis service. Check your connection and try again.');
         }
+
+        throw lastError;
       }
     }
-    
-    throw lastError || new Error('API call failed after all retries');
+
+    throw lastError || apiError('The analysis service failed. Please try again.');
   }
 
   _cleanJSON(text) {
@@ -461,13 +486,14 @@ Return ONLY valid JSON:
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a chat analyst. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
-      ], 0.4, 2500, 5);
+      ], 0.4, 4096, 5);
       
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
       return parsed;
     } catch (e) {
       console.error(`⚠️ Core analysis error: ${e}`);
+      if (e.isApiError) throw e;
       return {
         personalities: [],
         roles: {},
@@ -546,7 +572,7 @@ Return ONLY valid JSON:
       const response = await this._callGroqAPI([
         { role: 'system', content: 'You are a comedy curator finding the WILDEST moments. No filter. Find the funniest, darkest, weirdest stuff. Return ONLY valid JSON, no markdown.' },
         { role: 'user', content: prompt }
-      ], 0.7, 4000, 5);
+      ], 0.7, 8192, 5);
       
       const cleaned = this._cleanJSON(response);
       const parsed = JSON.parse(cleaned);
@@ -555,6 +581,7 @@ Return ONLY valid JSON:
       return parsed;
     } catch (e) {
       console.error(`⚠️ Content analysis error: ${e}`);
+      if (e.isApiError) throw e;
       return this._getEmptyContentStructure();
     }
   }
@@ -657,7 +684,6 @@ Return ONLY valid JSON:
         if (!seenMessages.has(msgKey)) {
           seenMessages.add(msgKey);
           uniqueDankest.push(moment);
-        } else {
         }
       }
       
